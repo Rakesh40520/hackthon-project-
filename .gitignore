@@ -1,0 +1,13 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Streamlit / OS noise
+.streamlit/secrets.toml
+.DS_Store
+Thumbs.db
