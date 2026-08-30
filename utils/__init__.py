@@ -1,1 +1,0 @@
-"""ClauseGuard utility package."""

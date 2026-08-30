@@ -1,0 +1,44 @@
+Google Cloud Platform Proposal
+==============================
+
+Prepared for: Demo Corp
+Date: 2026-08-29
+Contact: gcp-sales@example.com
+
+1. Executive Summary
+Google Cloud Platform delivers leading data, AI, and analytics services with
+a 99.95% SLA and global private network.
+
+2. Pricing
+Annual cost: $450,000 / year
+Implementation cost: $25,000 (one-time)
+Premium support: $20,000 / year
+Total Year 1: $495,000
+Year 3 total: $1,475,000
+Year 5 total: $2,455,000
+Price escalation: 4% annually.
+
+3. Technical Capabilities
+- REST API and gRPC; GraphQL via Apigee.
+- SAML and OIDC SSO included.
+- Encryption at rest with AES-256, encryption in transit TLS 1.3.
+- Multi-region deployment.
+- Native PostgreSQL (Cloud SQL), MySQL, Bigtable, Firestore.
+- Disaster recovery RTO 2 hours, RPO 10 minutes.
+- Integrations: Slack, GitHub, Okta, Salesforce.
+
+4. Security & Compliance
+- SOC 2 Type II
+- ISO 27001
+- GDPR
+- HIPAA
+- PCI-DSS
+
+5. Support
+24/7 support, customer success team. Implementation 75 days. Training included.
+
+6. Commercial Terms
+- Net 30 payment terms.
+- 3-year term available.
+- Auto-renewal with 60-day opt-out window.
+- Termination for convenience with 60 days notice.
