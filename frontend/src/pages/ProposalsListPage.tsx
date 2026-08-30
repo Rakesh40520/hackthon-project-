@@ -1,22 +1,46 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Search, FileText, ArrowRight, ExternalLink } from "lucide-react";
 import { Card } from "@/components/Card";
 import { StatusBadge } from "@/components/StatusBadge";
 import { EmptyState } from "@/components/EmptyState";
 import { useProposals } from "@/hooks/useProposals";
+import { useVendors } from "@/hooks/useVendors";
 import { format } from "date-fns";
 
 export default function ProposalsListPage() {
   const [q, setQ] = useState("");
-  const { data, isLoading } = useProposals();
-  const filtered = (data || []).filter(
+  const { data: proposals, isLoading: proposalsLoading } = useProposals();
+  const { data: vendors, isLoading: vendorsLoading } = useVendors();
+
+  // Create a vendor lookup map for faster access
+  const vendorMap = useMemo(() => {
+    if (!vendors) return {};
+    return vendors.reduce((acc, vendor) => {
+      acc[vendor.id] = vendor;
+      return acc;
+    }, {} as Record<string, any>);
+  }, [vendors]);
+
+  // Enrich proposals with vendor data
+  const enrichedProposals = useMemo(() => {
+    if (!proposals) return [];
+    return proposals.map((p) => ({
+      ...p,
+      vendorData: vendorMap[p.vendor_id] || null,
+    }));
+  }, [proposals, vendorMap]);
+
+  const filtered = enrichedProposals.filter(
     (p) =>
       !q ||
       p.title.toLowerCase().includes(q.toLowerCase()) ||
       (p.vendor_name || "").toLowerCase().includes(q.toLowerCase()) ||
-      (p.vendor_company || "").toLowerCase().includes(q.toLowerCase())
+      (p.vendor_company || "").toLowerCase().includes(q.toLowerCase()) ||
+      (p.vendorData?.name || "").toLowerCase().includes(q.toLowerCase())
   );
+
+  const isLoading = proposalsLoading || vendorsLoading;
 
   return (
     <div className="space-y-5">
@@ -38,7 +62,12 @@ export default function ProposalsListPage() {
       </div>
 
       {isLoading ? (
-        <div className="text-slate-500 text-sm py-4">Loading proposals...</div>
+        <div className="text-slate-500 text-sm py-4">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full border-2 border-brand-300 border-t-brand-600 animate-spin"></div>
+            Loading proposals and vendor data...
+          </div>
+        </div>
       ) : !filtered.length ? (
         <Card>
           <EmptyState
@@ -62,44 +91,55 @@ export default function ProposalsListPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filtered.map((p) => (
-                  <tr key={p.id} className="hover:bg-slate-50/80 transition">
-                    <td className="p-3.5">
-                      <Link
-                        to={`/proposals/${p.id}`}
-                        className="font-bold text-slate-900 hover:text-brand-700 transition"
-                      >
-                        {p.vendor_name || p.vendor_company || "Vendor"}
-                      </Link>
-                    </td>
-                    <td className="p-3.5 text-slate-600 font-medium">
-                      {p.title}
-                    </td>
-                    <td className="p-3.5">
-                      <StatusBadge status={p.status} />
-                    </td>
-                    <td className="p-3.5">
-                      {p.score !== undefined && p.score !== null ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                          {Math.round(p.score)}/100
-                        </span>
-                      ) : (
-                        <span className="text-xs text-slate-400">Pending</span>
-                      )}
-                    </td>
-                    <td className="p-3.5 text-slate-500 text-xs">
-                      {p.updated_at ? format(new Date(p.updated_at), "MMM d, HH:mm") : "�"}
-                    </td>
-                    <td className="p-3.5 text-right">
-                      <Link
-                        to={`/proposals/${p.id}`}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-800"
-                      >
-                        View Analysis <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                {filtered.map((p) => {
+                  // Prioritize vendor display: vendorData.name → vendor_name → vendor_company → fallback
+                  const displayVendorName =
+                    p.vendorData?.name ||
+                    p.vendor_name ||
+                    p.vendor_company ||
+                    "Vendor";
+
+                  return (
+                    <tr key={p.id} className="hover:bg-slate-50/80 transition">
+                      <td className="p-3.5">
+                        <Link
+                          to={`/proposals/${p.id}`}
+                          className="font-bold text-slate-900 hover:text-brand-700 transition"
+                        >
+                          {displayVendorName}
+                        </Link>
+                      </td>
+                      <td className="p-3.5 text-slate-600 font-medium">
+                        {p.title}
+                      </td>
+                      <td className="p-3.5">
+                        <StatusBadge status={p.status} />
+                      </td>
+                      <td className="p-3.5">
+                        {p.score !== undefined && p.score !== null ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                            {Math.round(p.score)}/100
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-400">Pending</span>
+                        )}
+                      </td>
+                      <td className="p-3.5 text-slate-500 text-xs">
+                        {p.updated_at
+                          ? format(new Date(p.updated_at), "MMM d, HH:mm")
+                          : "—"}
+                      </td>
+                      <td className="p-3.5 text-right">
+                        <Link
+                          to={`/proposals/${p.id}`}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-800"
+                        >
+                          View Analysis <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
