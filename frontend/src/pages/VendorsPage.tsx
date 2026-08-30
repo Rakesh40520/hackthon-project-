@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Plus, Search, Building2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/Card";
 import { StatusBadge } from "@/components/StatusBadge";
 import { EmptyState } from "@/components/EmptyState";
@@ -8,6 +9,7 @@ import toast from "react-hot-toast";
 
 export default function VendorsPage() {
   const [q, setQ] = useState("");
+  const navigate = useNavigate();
   const { data, isLoading } = useVendors(q);
   const create = useCreateVendor();
   const [showNew, setShowNew] = useState(false);
@@ -16,6 +18,10 @@ export default function VendorsPage() {
   const onCreate = async () => {
     try { await create.mutateAsync(form); toast.success("Vendor created"); setShowNew(false); setForm({ company_name: "", contact_name: "", email: "", industry: "", description: "" }); }
     catch { toast.error("Failed to create vendor"); }
+  };
+
+  const handleVendorClick = (vendorId: number) => {
+    navigate(`/proposals?vendor=${vendorId}`);
   };
 
   return (
@@ -36,7 +42,11 @@ export default function VendorsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {data.map((v) => (
-            <Card key={v.id} className="hover:shadow-elev transition">
+            <Card
+              key={v.id}
+              className="hover:shadow-elev transition cursor-pointer"
+              onClick={() => handleVendorClick(v.id)}
+            >
               <div className="flex items-start justify-between">
                 <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 text-white flex items-center justify-center">
                   <Building2 className="w-5 h-5" />
